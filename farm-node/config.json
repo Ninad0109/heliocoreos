@@ -1,0 +1,27 @@
+{
+    "master_ip": "192.168.1.100",
+    "master_port": 5000,
+    "telemetry_interval": 1.0,
+    "ldr_pins": [
+        17,
+        27,
+        22,
+        23,
+        24,
+        25
+    ],
+    "rain_pins": [
+        5,
+        6
+    ],
+    "motor1_step": 12,
+    "motor1_dir": 16,
+    "motor2_step": 20,
+    "motor2_dir": 21,
+    "motor3_step": 13,
+    "motor3_dir": 19,
+    "base_min_angle": -160,
+    "base_max_angle": 160,
+    "tilt_min_angle": 0,
+    "tilt_max_angle": 90
+}

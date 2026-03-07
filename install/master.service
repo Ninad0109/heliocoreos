@@ -1,0 +1,14 @@
+[Unit]
+Description=HelioCore OS Telemetry Server
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/heliocoreos/master-node
+ExecStart=/usr/bin/python3 telemetry_server.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

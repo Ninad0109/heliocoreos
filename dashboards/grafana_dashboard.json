@@ -1,0 +1,129 @@
+{
+    "dashboard": {
+        "title": "HelioCore OS Dashboard",
+        "panels": [
+            {
+                "id": 1,
+                "title": "Farm Node Status",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "farm_online"
+                    }
+                ],
+                "gridPos": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 6,
+                    "h": 4
+                }
+            },
+            {
+                "id": 2,
+                "title": "Base Angle",
+                "type": "gauge",
+                "targets": [
+                    {
+                        "expr": "base_angle"
+                    }
+                ],
+                "fieldConfig": {
+                    "min": -160,
+                    "max": 160
+                },
+                "gridPos": {
+                    "x": 6,
+                    "y": 0,
+                    "w": 6,
+                    "h": 4
+                }
+            },
+            {
+                "id": 3,
+                "title": "Tilt Angle",
+                "type": "gauge",
+                "targets": [
+                    {
+                        "expr": "tilt_angle"
+                    }
+                ],
+                "fieldConfig": {
+                    "min": 0,
+                    "max": 90
+                },
+                "gridPos": {
+                    "x": 12,
+                    "y": 0,
+                    "w": 6,
+                    "h": 4
+                }
+            },
+            {
+                "id": 4,
+                "title": "LDR Sensors",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "ldr_left",
+                        "legendFormat": "Left"
+                    },
+                    {
+                        "expr": "ldr_right",
+                        "legendFormat": "Right"
+                    },
+                    {
+                        "expr": "ldr_top",
+                        "legendFormat": "Top"
+                    },
+                    {
+                        "expr": "ldr_bottom",
+                        "legendFormat": "Bottom"
+                    }
+                ],
+                "gridPos": {
+                    "x": 0,
+                    "y": 4,
+                    "w": 12,
+                    "h": 4
+                }
+            },
+            {
+                "id": 5,
+                "title": "Rain Sensor",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "rain_sensor"
+                    }
+                ],
+                "gridPos": {
+                    "x": 12,
+                    "y": 4,
+                    "w": 6,
+                    "h": 4
+                }
+            },
+            {
+                "id": 6,
+                "title": "Petal State",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "petal_state"
+                    }
+                ],
+                "gridPos": {
+                    "x": 18,
+                    "y": 0,
+                    "w": 6,
+                    "h": 4
+                }
+            }
+        ],
+        "refresh": "1s",
+        "time": {
+            "from": "now-5m",
+            "to": "now"
+        }
+    }
+}

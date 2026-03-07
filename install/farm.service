@@ -1,0 +1,14 @@
+[Unit]
+Description=HelioCore OS Farm Node
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/pi/heliocoreos/farm-node
+ExecStart=/usr/bin/python3 farm_node.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
