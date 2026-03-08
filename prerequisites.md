@@ -1,14 +1,39 @@
 # HelioCore OS — Prerequisites & Setup Guide
 
+## System Architecture
+
+```
+┌─────────────────────────┐        ┌─────────────────────────┐
+│       MASTER-PI         │        │        FARM-PI          │
+│                         │        │                         │
+│  ┌─────────────────┐    │  HTTP  │  ┌─────────────────┐    │
+│  │ Grafana :3000   │◄───┼────────┤  │ Sensors/Motors  │    │
+│  └────────┬────────┘    │        │  └────────┬────────┘    │
+│           │ query       │        │           │             │
+│  ┌────────▼────────┐    │        │  ┌────────▼────────┐    │
+│  │ Prometheus:9090 │    │  POST  │  │ Farm Node       │    │
+│  └────────┬────────┘    │◄───────┤  │ (telemetry TX)  │    │
+│           │ scrape      │        │  └─────────────────┘    │
+│  ┌────────▼────────┐    │        │                         │
+│  │ Telemetry :5000 │    │        │  ┌─────────────────┐    │
+│  │ Node Reg  :5001 │    │        │  │ HelioCore OS    │    │
+│  └─────────────────┘    │        │  │ CLI Terminal    │    │
+│                         │        │  └─────────────────┘    │
+│  Shows: Grafana         │        │  Shows: OS + Logs       │
+│  Dashboard               │        │  Terminal                │
+└─────────────────────────┘        └─────────────────────────┘
+```
+
 ## Hardware Requirements
 
 ### Per Node
 | Component | Master-Pi | Farm-Pi |
 |-----------|-----------|---------|
-| Raspberry Pi 3B+/4 | ✅ | ✅ |
+| Raspberry Pi 3B+/4/5 | ✅ | ✅ |
 | MicroSD card (16GB+) | ✅ | ✅ |
 | USB-C 5V/3A power supply | ✅ | ✅ |
-| Ethernet cable or WiFi | ✅ | ✅ |
+| Ethernet or WiFi | ✅ | ✅ |
+| Monitor/display (optional) | Dashboard view | OS terminal |
 
 ### Farm-Pi Only
 | Component | Qty | GPIO Pins |
@@ -18,7 +43,6 @@
 | NEMA 23 stepper motors | 3 | — |
 | DRV8825 stepper drivers | 3 | STEP/DIR: 12/16, 20/21, 13/19 |
 | 12–24V power supply (motors) | 1 | — |
-| GPIO training board | 1 | — |
 
 ---
 
@@ -27,7 +51,27 @@
 ### Raspberry Pi OS
 - **Version:** Raspberry Pi OS Lite (Bookworm) or Desktop
 - **Download:** https://www.raspberrypi.com/software/
-- Flash with Raspberry Pi Imager, enable SSH and set hostname during flashing
+- Enable SSH and set hostname during flashing
+
+### Python Packages
+| Package | Master-Pi | Farm-Pi | Purpose |
+|---------|-----------|---------|---------|
+| flask 2.3.0 | ✅ | — | Telemetry server |
+| werkzeug 2.3.0 | ✅ | — | Flask dependency |
+| requests 2.31.0 | ✅ | ✅ | HTTP client |
+| psutil 5.9.0 | ✅ | ✅ | CPU/memory metrics |
+| prompt-toolkit 3.0.36 | — | ✅ | Interactive CLI shell |
+| RPi.GPIO 0.7.1 | — | ✅ | GPIO hardware control |
+
+### Services Installed
+| Service | Master-Pi | Farm-Pi | Port |
+|---------|-----------|---------|------|
+| Grafana OSS | ✅ (via apt) | — | :3000 |
+| Prometheus | ✅ (binary) | — | :9090 |
+| Telemetry server | ✅ (systemd) | — | :5000 |
+| Node registry | ✅ (systemd) | — | :5001 |
+| Farm node | — | ✅ (systemd) | — |
+| Node agent | — | ✅ (systemd) | — |
 
 ### Recommended Hostnames
 | Node | Hostname | Suggested Static IP |
@@ -57,96 +101,117 @@ Update `farm-node/config.json` → `"master_ip": "master-pi.local"`.
 
 ## Wiring Guide
 
-### Sensor Connections (Farm-Pi GPIO Training Board)
-Each sensor has 3 pins: **VCC → 5V**, **OUT → GPIO**, **GND → GND**
+### Sensor Connections (GPIO)
+Each sensor: **VCC → 5V**, **OUT → GPIO**, **GND → GND**
 
 | Sensor | Function | GPIO Pin |
 |--------|----------|----------|
-| LDR 1 | Left-Top | 17 |
-| LDR 2 | Top-Center | 27 |
-| LDR 3 | Right-Top | 22 |
-| LDR 4 | Left-Bottom | 23 |
-| LDR 5 | Bottom-Center | 24 |
-| LDR 6 | Right-Bottom | 25 |
-| Rain 1 | Primary | 5 |
-| Rain 2 | Secondary | 6 |
+| LDR 1 | Left-Bottom | 6 |
+| LDR 2 | Left-Top | 26 |
+| LDR 3 | Right-Top | 17 |
+| LDR 4 | Right-Bottom | 5 |
+| Rain | Rain Sensor | 15 |
 
-### Motor Connections (DRV8825 Drivers)
+### Motor Connections (DRV8825)
 | Motor | Function | STEP Pin | DIR Pin |
 |-------|----------|----------|---------|
-| Motor 1 | Petal open/close | 12 | 16 |
-| Motor 2 | Tilt (0°–90°) | 20 | 21 |
-| Motor 3 | Base (±160°) | 13 | 19 |
-
-**DRV8825 wiring per driver:**
-- `STEP` → GPIO STEP pin
-- `DIR` → GPIO DIR pin
-- `GND` → Pi GND + Power Supply GND (common ground)
-- `VMOT` → 12–24V power supply +
-- `ENABLE` → GND (always enabled)
-- `A1, A2, B1, B2` → Motor coil wires
+| Base | Rotation (±160°) | 12 | 4 |
+| Tilt | Elevation (0°–90°) | 13 | 19 |
+| Petal | Open/Close | 27 | 18 |
 
 ---
 
-## Installation
+## Installation (Plug & Play)
 
-### 1. Clone the repository on BOTH Pis
+### Step 1: Clone on BOTH Pis
 ```bash
 cd ~
 git clone <your-repo-url> heliocoreos
 cd heliocoreos
 ```
 
-### 2. Run setup script
-
-**On Master-Pi:**
+### Step 2: Setup Master-Pi
 ```bash
 chmod +x install/master-pi.sh
 sudo bash install/master-pi.sh
 ```
+This installs Grafana, Prometheus, telemetry server, and node registry.
+All services auto-start on boot.
 
-**On Farm-Pi:**
+### Step 3: Configure Farm-Pi
 ```bash
-# First edit the Master-Pi IP address
-nano farm-node/config.json   # Change "master_ip" to your Master-Pi IP
+# Set the Master-Pi IP address
+nano farm-node/config.json
+# Change "master_ip" to your Master-Pi IP (e.g., "192.168.1.100")
 
+# Run setup
 chmod +x install/farm-pi.sh
 sudo bash install/farm-pi.sh
 ```
+This installs sensors, motors, and the HelioCore OS CLI shell.
+On boot, the Farm-Pi auto-logs in and shows the HelioCore OS terminal.
 
-### 3. Start the system
-
-**On Master-Pi** (auto-starts on boot, or manually):
+### Step 4: Reboot & Verify
 ```bash
-sudo systemctl start heliocore-telemetry
-sudo systemctl start heliocore-registry
-python3 master-node/heliocore_os.py   # Optional: CLI dashboard
+# On both Pis
+sudo reboot
 ```
 
-**On Farm-Pi** (auto-starts on boot, or manually):
+After reboot:
+- **Master-Pi** → Open browser → http://master-pi:3000 → Grafana dashboard
+- **Farm-Pi** → Monitor shows HelioCore OS terminal with live status
+
+---
+
+## Demo Mode (Without Hardware)
+
+To test the full pipeline without Raspberry Pi hardware:
+
 ```bash
-sudo python3 core/init.py
+# Terminal 1: Start Master-Pi demo (downloads Grafana + Prometheus)
+bash demo/demo-master-pi.sh
+
+# Terminal 2: Start Farm-Pi simulator (interactive CLI)
+bash demo/demo-farm-pi.sh [master-ip]
 ```
 
-### 4. Access dashboards
-- **CLI Dashboard:** runs in terminal on Master-Pi
-- **Grafana:** http://master-pi:3000 (login: `admin` / `admin`)
-- **Telemetry API:** http://master-pi:5000/status
-- **Node Registry:** http://master-pi:5001/node/list
+### Demo Features
+| Feature | Master-Pi Terminal | Farm-Pi Terminal |
+|---------|-------------------|-----------------|
+| Output | Grafana dashboard at :3000 | HelioCore OS CLI shell |
+| Metrics | 21 Prometheus metrics | Live logs + status |
+| Commands | Tail logs | status, logs, metrics, health, top |
+| Stop | `bash demo/demo-master-pi.sh stop` | Type `exit` |
+
+### Metrics Exposed (21 total)
+| Category | Metrics |
+|----------|---------|
+| Sensors | `ldr_left`, `ldr_right`, `ldr_top`, `ldr_bottom`, `rain_sensor` |
+| Motors | `motor_state`, `motor_base_state`, `motor_tilt_state`, `motor_temperature` |
+| Panel | `base_angle`, `tilt_angle`, `petal_state` |
+| Tracking | `tracking_active`, `tracking_direction`, `alignment_error` |
+| System | `cpu_usage`, `memory_usage`, `heliocore_service_health` |
+| Node | `farm_online`, `farm_node_latency`, `light_intensity_avg` |
 
 ---
 
 ## Verification
 
 ```bash
-# On Master-Pi — run integration test
-cd ~/heliocoreos
-python3 test/integration_test.py
+# On Master-Pi — check services
+systemctl status heliocore-telemetry
+systemctl status heliocore-registry
+systemctl status prometheus
+systemctl status grafana-server
 
-# On Farm-Pi — test sensors
+# On Farm-Pi — check services
+systemctl status heliocore-farm
+systemctl status heliocore-agent
+
+# Test sensors
 python3 farm-node/sensor_manager.py
 
-# On Farm-Pi — test motors
+# Test motors
 sudo python3 farm-node/motor_controller.py
 ```
 
@@ -156,9 +221,11 @@ sudo python3 farm-node/motor_controller.py
 
 | Problem | Fix |
 |---------|-----|
-| `ModuleNotFoundError: RPi.GPIO` | Run `sudo pip3 install RPi.GPIO` (Farm-Pi only) |
-| Farm-Pi can't reach Master-Pi | Check `ping master-pi` and verify `config.json` IP |
-| Motors don't move | Check 12–24V power supply and DRV8825 wiring |
-| Sensors stuck at 0 | Verify VCC=5V on GPIO training board |
-| Grafana shows no data | Ensure telemetry server is running: `systemctl status heliocore-telemetry` |
+| `ModuleNotFoundError: RPi.GPIO` | `sudo pip3 install RPi.GPIO` (Farm-Pi only) |
+| Farm-Pi can't reach Master-Pi | Check `ping master-pi` and `config.json` IP |
+| Motors don't move | Check 12–24V power and DRV8825 wiring |
+| Sensors stuck at 0 | Verify VCC=5V on GPIO board |
+| Grafana shows no data | `systemctl status heliocore-telemetry` + `systemctl status prometheus` |
 | Permission denied on GPIO | Run with `sudo` or add user to `gpio` group |
+| Dashboard panels empty | Run `python3 dashboards/import_dashboard.py` |
+| Prometheus not scraping | Check `http://master-pi:9090/targets` |

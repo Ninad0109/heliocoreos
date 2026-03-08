@@ -2,24 +2,25 @@
     "master_ip": "192.168.1.100",
     "master_port": 5000,
     "telemetry_interval": 1.0,
-    "ldr_pins": [
-        17,
-        27,
-        22,
-        23,
-        24,
-        25
-    ],
-    "rain_pins": [
-        5,
-        6
-    ],
-    "motor1_step": 12,
-    "motor1_dir": 16,
-    "motor2_step": 20,
-    "motor2_dir": 21,
-    "motor3_step": 13,
-    "motor3_dir": 19,
+    "ldr_pins": {
+        "left_bottom": 6,
+        "left_top": 26,
+        "right_top": 17,
+        "right_bottom": 5
+    },
+    "rain_pin": 15,
+    "base_motor": {
+        "dir_pin": 4,
+        "step_pin": 12
+    },
+    "tilt_motor": {
+        "dir_pin": 19,
+        "step_pin": 13
+    },
+    "petal_motor": {
+        "dir_pin": 18,
+        "step_pin": 27
+    },
     "base_min_angle": -160,
     "base_max_angle": 160,
     "tilt_min_angle": 0,

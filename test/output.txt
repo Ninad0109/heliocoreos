@@ -1,0 +1,46 @@
+ * Serving Flask app 'telemetry_server'
+ * Debug mode: off
+======================================================================
+LIVE INTEGRATION TEST: Simulator -> Telemetry Server
+======================================================================
+
+  [SIM] Rain event! Duration: 6 ticks
+  Tick  1  Sun: -144.0/ 14.1  Panel:   -2.0/ 43.0  LDR:1002 [TRACK]  TX:OK  [PASS]
+  Tick  2  Sun: -128.0/ 27.8  Panel:   +0.0/  0.0  LDR:2002 [RAIN]  TX:OK  [PASS]
+  Tick  3  Sun: -112.0/ 40.9  Panel:   +0.0/  0.0  LDR:1010 [RAIN]  TX:OK  [PASS]
+  Tick  4  Sun:  -96.0/ 52.9  Panel:   +0.0/  0.0  LDR:2020 [RAIN]  TX:OK  [PASS]
+  Tick  5  Sun:  -80.0/ 63.6  Panel:   +0.0/  0.0  LDR:1020 [RAIN]  TX:OK  [PASS]
+  Tick  6  Sun:  -64.0/ 72.8  Panel:   +0.0/  0.0  LDR:2010 [RAIN]  TX:OK  [PASS]
+  Tick  7  Sun:  -48.0/ 80.2  Panel:   +0.0/  0.0  LDR:2020 [RAIN]  TX:OK  [PASS]
+  Tick  8  Sun:  -32.0/ 85.6  Panel:   -2.0/  2.0  LDR:2010 [TRACK]  TX:OK  [PASS]
+  Tick  9  Sun:  -16.0/ 88.9  Panel:   -4.0/  4.0  LDR:2020 [TRACK]  TX:OK  [PASS]
+  Tick 10  Sun:   -0.0/ 90.0  Panel:   -2.0/  6.0  LDR:0210 [TRACK]  TX:OK  [PASS]
+
+Prometheus /metrics endpoint (10 lines):
+  ldr_left 0
+  ldr_right 2
+  ldr_top 1
+  ldr_bottom 0
+  rain_sensor 0
+  petal_state 1
+  tilt_angle 6.0
+  base_angle -2.0
+  motor_state 1
+  farm_online 1
+
+Final /status JSON:
+  base_angle: -2.0
+  farm_online: True
+  ldr_bottom: 0
+  ldr_left: 0
+  ldr_right: 2
+  ldr_top: 1
+  motor_state: 1
+  petal_state: 1
+  rain: 0
+  tilt_angle: 6.0
+  timestamp: 2026-03-08T08:37:29.157429
+
+======================================================================
+RESULT: 10/10 ticks verified — ALL PASSED
+======================================================================
